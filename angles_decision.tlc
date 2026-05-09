@@ -1,5 +1,5 @@
 %% File : angles_decision.tlc
-%% Created : Wed May 06 09:26:11 2026
+%% Created : Sat May 09 23:09:24 2026
 %%
 %% Description: 
 %%   Simulink Coder wrapper functions interface generated for 
@@ -50,7 +50,8 @@
 			real_T *best_next_theta_3_pos,
 			real_T *best_next_theta_1_neg,
 			real_T *best_next_theta_2_neg,
-			real_T *best_next_theta_3_neg);
+			real_T *best_next_theta_3_neg,
+			real_T *end_effector_calculated);
     #undef SFB_EXTERN_C
     #endif
     %closefile hFile
@@ -77,7 +78,8 @@
 			real_T *best_next_theta_3_pos,
 			real_T *best_next_theta_1_neg,
 			real_T *best_next_theta_2_neg,
-			real_T *best_next_theta_3_neg);
+			real_T *best_next_theta_3_neg,
+			real_T *end_effector_calculated);
     extern void angles_decision_Terminate_wrapper(void);
     void angles_decision_Outputs_wrapper_accel(const real_T *final_pos,
 			const real_T *current_theta_1,
@@ -88,7 +90,8 @@
 			real_T *best_next_theta_3_pos,
 			real_T *best_next_theta_1_neg,
 			real_T *best_next_theta_2_neg,
-			real_T *best_next_theta_3_neg){
+			real_T *best_next_theta_3_neg,
+			real_T *end_effector_calculated){
     angles_decision_Outputs_wrapper(final_pos,
 			current_theta_1,
 			current_theta_2,
@@ -98,7 +101,8 @@
 			best_next_theta_3_pos,
 			best_next_theta_1_neg,
 			best_next_theta_2_neg,
-			best_next_theta_3_neg);
+			best_next_theta_3_neg,
+			end_effector_calculated);
     }
 
     %closefile cFile
@@ -125,7 +129,8 @@
 			real_T *best_next_theta_3_pos,
 			real_T *best_next_theta_1_neg,
 			real_T *best_next_theta_2_neg,
-			real_T *best_next_theta_3_neg);
+			real_T *best_next_theta_3_neg,
+			real_T *end_effector_calculated);
 
     SFB_EXTERN_C void angles_decision_Terminate_wrapper(void);
 
@@ -155,11 +160,12 @@
   %assign py3 = LibBlockOutputSignalAddr(3, "", "", 0)
   %assign py4 = LibBlockOutputSignalAddr(4, "", "", 0)
   %assign py5 = LibBlockOutputSignalAddr(5, "", "", 0)
+  %assign py6 = LibBlockOutputSignalAddr(6, "", "", 0)
   
   %if IsModelReferenceSimTarget() || CodeFormat == "S-Function" || ::isRAccel
-    angles_decision_Outputs_wrapper_accel(%<pu0>, %<pu1>, %<pu2>, %<pu3>, %<py0>, %<py1>, %<py2>, %<py3>, %<py4>, %<py5>);
+    angles_decision_Outputs_wrapper_accel(%<pu0>, %<pu1>, %<pu2>, %<pu3>, %<py0>, %<py1>, %<py2>, %<py3>, %<py4>, %<py5>, %<py6>);
   %else
-    angles_decision_Outputs_wrapper(%<pu0>, %<pu1>, %<pu2>, %<pu3>, %<py0>, %<py1>, %<py2>, %<py3>, %<py4>, %<py5>);
+    angles_decision_Outputs_wrapper(%<pu0>, %<pu1>, %<pu2>, %<pu3>, %<py0>, %<py1>, %<py2>, %<py3>, %<py4>, %<py5>, %<py6>);
   %endif
 
   %%

@@ -26,7 +26,7 @@
  * | See matlabroot/simulink/src/sfuntmpl_doc.c for a more detailed template |
  *  -------------------------------------------------------------------------
  *
- * Created: Wed May 06 09:26:11 2026
+ * Created: Sat May 09 23:09:24 2026
  */
 
 #define S_FUNCTION_LEVEL               2
@@ -107,7 +107,7 @@
 #define IN_3_FRACTIONLENGTH            9
 #define IN_3_BIAS                      0
 #define IN_3_SLOPE                     0.125
-#define NUM_OUTPUTS                    6
+#define NUM_OUTPUTS                    7
 
 /* Output Port  0 */
 #define OUT_PORT_0_NAME                best_next_theta_1_pos
@@ -210,6 +210,23 @@
 #define OUT_5_FRACTIONLENGTH           3
 #define OUT_5_BIAS                     0
 #define OUT_5_SLOPE                    0.125
+
+/* Output Port  6 */
+#define OUT_PORT_6_NAME                end_effector_calculated
+#define OUTPUT_6_WIDTH                 3
+#define OUTPUT_DIMS_6_COL              1
+#define OUTPUT_6_DTYPE                 real_T
+#define OUTPUT_6_COMPLEX               COMPLEX_NO
+#define OUT_6_FRAME_BASED              FRAME_NO
+#define OUT_6_BUS_BASED                0
+#define OUT_6_BUS_NAME
+#define OUT_6_DIMS                     2-D
+#define OUT_6_ISSIGNED                 1
+#define OUT_6_WORDLENGTH               8
+#define OUT_6_FIXPOINTSCALING          1
+#define OUT_6_FRACTIONLENGTH           3
+#define OUT_6_BIAS                     0
+#define OUT_6_SLOPE                    0.125
 #define NPARAMS                        0
 #define SAMPLE_TIME_0                  INHERITED_SAMPLE_TIME
 #define NUM_DISC_STATES                0
@@ -238,7 +255,8 @@ extern void angles_decision_Outputs_wrapper(const real_T *final_pos,
   real_T *best_next_theta_3_pos,
   real_T *best_next_theta_1_neg,
   real_T *best_next_theta_2_neg,
-  real_T *best_next_theta_3_neg);
+  real_T *best_next_theta_3_neg,
+  real_T *end_effector_calculated);
 
 /*====================*
  * S-function methods *
@@ -322,6 +340,14 @@ static void mdlInitializeSizes(SimStruct *S)
   ssSetOutputPortWidth(S, 5, OUTPUT_5_WIDTH);
   ssSetOutputPortDataType(S, 5, SS_DOUBLE);
   ssSetOutputPortComplexSignal(S, 5, OUTPUT_5_COMPLEX);
+
+  /* Output Port 6 */
+  outputDimsInfo.width = OUTPUT_6_WIDTH;
+  ssSetOutputPortDimensionInfo(S, 6, &outputDimsInfo);
+  ssSetOutputPortMatrixDimensions(S, 6, OUTPUT_6_WIDTH, OUTPUT_DIMS_6_COL);
+  ssSetOutputPortFrameData(S, 6, OUT_6_FRAME_BASED);
+  ssSetOutputPortDataType(S, 6, SS_DOUBLE);
+  ssSetOutputPortComplexSignal(S, 6, OUTPUT_6_COMPLEX);
   ssSetNumPWork(S, 0);
   ssSetNumSampleTimes(S, 1);
   ssSetNumRWork(S, 0);
@@ -453,10 +479,11 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   real_T *best_next_theta_1_neg = (real_T *) ssGetOutputPortRealSignal(S, 3);
   real_T *best_next_theta_2_neg = (real_T *) ssGetOutputPortRealSignal(S, 4);
   real_T *best_next_theta_3_neg = (real_T *) ssGetOutputPortRealSignal(S, 5);
+  real_T *end_effector_calculated = (real_T *) ssGetOutputPortRealSignal(S, 6);
   angles_decision_Outputs_wrapper(final_pos, current_theta_1, current_theta_2,
     current_theta_3, best_next_theta_1_pos, best_next_theta_2_pos,
     best_next_theta_3_pos, best_next_theta_1_neg, best_next_theta_2_neg,
-    best_next_theta_3_neg);
+    best_next_theta_3_neg, end_effector_calculated);
 }
 
 /* Function: mdlTerminate =====================================================

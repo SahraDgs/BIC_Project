@@ -14,6 +14,7 @@
 
 /* %%%-SFUNWIZ_wrapper_includes_Changes_BEGIN --- EDIT HERE TO _END */
 #include <math.h>
+#include "mex.h"
 /* %%%-SFUNWIZ_wrapper_includes_Changes_END --- EDIT HERE TO _BEGIN */
 #define u_width 2
 #define y_width 1
@@ -24,14 +25,26 @@
  */
 /* %%%-SFUNWIZ_wrapper_externs_Changes_BEGIN --- EDIT HERE TO _END */
 /* extern double func(double a); */
-#define L1 30.2
-#define L2 26.9
-#define L3 10.6
+#define L1 0.44
+#define L2 0.270
+#define L3 0.105
 
 #define WEIGHT_VAR_ANGLE 0.4
-#define DELTA_THETA_DEG 0.5
+#define DELTA_THETA_DEG 0.1
 #define PI_VAL 3.14159265358979323846
 #define DEG_TO_RAD (PI_VAL / 180.0)
+
+static real_T wrap_to_pi(real_T angle)
+{
+    angle = fmod(angle + PI_VAL, 2.0 * PI_VAL);
+
+    if (angle < 0.0)
+    {
+        angle += 2.0 * PI_VAL;
+    }
+
+    return angle - PI_VAL;
+}
 /* %%%-SFUNWIZ_wrapper_externs_Changes_END --- EDIT HERE TO _BEGIN */
 
 /*
@@ -47,12 +60,11 @@ void angles_decision_Outputs_wrapper(const real_T *final_pos,
 			real_T *best_next_theta_3_pos,
 			real_T *best_next_theta_1_neg,
 			real_T *best_next_theta_2_neg,
-			real_T *best_next_theta_3_neg)
+			real_T *best_next_theta_3_neg,
+			real_T *end_effector_calculated)
 {
 /* %%%-SFUNWIZ_wrapper_Outputs_Changes_BEGIN --- EDIT HERE TO _END */
-
-
-    real_T current_theta[3];
+real_T current_theta[3];
 
     real_T possible_delta_deg[3] = {-DELTA_THETA_DEG, 0.0, DELTA_THETA_DEG};
 
@@ -66,9 +78,9 @@ void angles_decision_Outputs_wrapper(const real_T *final_pos,
     int i2;
     int i3;
 
-    current_theta[0] = current_theta_1[0];
-    current_theta[1] = current_theta_2[0];
-    current_theta[2] = current_theta_3[0];
+    current_theta[0] = wrap_to_pi(current_theta_1[0]);
+    current_theta[1] = wrap_to_pi(current_theta_2[0]);
+    current_theta[2] = wrap_to_pi(current_theta_3[0]);
 
     best_cost = 1.0e300;
 
@@ -105,13 +117,13 @@ void angles_decision_Outputs_wrapper(const real_T *final_pos,
                 delta_theta_2 = possible_delta_deg[i2] * DEG_TO_RAD;
                 delta_theta_3 = possible_delta_deg[i3] * DEG_TO_RAD;
 
-                new_theta_1 = current_theta[0] + delta_theta_1;
-                new_theta_2 = current_theta[1] + delta_theta_2;
-                new_theta_3 = current_theta[2] + delta_theta_3;
+                new_theta_1 = wrap_to_pi(current_theta[0] + delta_theta_1);
+                new_theta_2 = wrap_to_pi(current_theta[1] + delta_theta_2);
+                new_theta_3 = wrap_to_pi(current_theta[2] + delta_theta_3);
 
-                angle_l1 = new_theta_1;
-                angle_l2 = new_theta_1 + new_theta_2;
-                angle_l3 = new_theta_1 + new_theta_2 + new_theta_3;
+                angle_l1 = new_theta_1 +PI_VAL/2;
+                angle_l2 = new_theta_1 + new_theta_2 +PI_VAL/2;
+                angle_l3 = new_theta_1 + new_theta_2 + new_theta_3+PI_VAL/2;
 
                 x_after_rot = L1 * cos(angle_l1)
                             + L2 * cos(angle_l2)
@@ -153,6 +165,15 @@ void angles_decision_Outputs_wrapper(const real_T *final_pos,
      * pos = 0 and neg = 0
      */
 
+    end_effector_calculated[0] = L1 * cos(current_theta[0]+PI_VAL/2)
+                           + L2 * cos(current_theta[0] + current_theta[1] + PI_VAL/2)
+                           + L3 * cos(current_theta[0] + current_theta[1] + current_theta[2] + PI_VAL/2);
+    end_effector_calculated[1] = 0.0;
+    end_effector_calculated[2] = L1 * sin(current_theta[0]+PI_VAL/2)
+                           + L2 * sin(current_theta[0] + current_theta[1]+PI_VAL/2)
+                           + L3 * sin(current_theta[0] + current_theta[1] + current_theta[2]+PI_VAL/2);
+
+
     best_next_theta_1_pos[0] = (best_delta_theta_1 > 0.0) ? 1.0 : 0.0;
     best_next_theta_2_pos[0] = (best_delta_theta_2 > 0.0) ? 1.0 : 0.0;
     best_next_theta_3_pos[0] = (best_delta_theta_3 > 0.0) ? 1.0 : 0.0;
@@ -160,8 +181,19 @@ void angles_decision_Outputs_wrapper(const real_T *final_pos,
     best_next_theta_1_neg[0] = (best_delta_theta_1 < 0.0) ? 1.0 : 0.0;
     best_next_theta_2_neg[0] = (best_delta_theta_2 < 0.0) ? 1.0 : 0.0;
     best_next_theta_3_neg[0] = (best_delta_theta_3 < 0.0) ? 1.0 : 0.0;
-
-
+    
+    mexPrintf("-------------------------\n");
+    mexPrintf("end = %f\n",end_effector_calculated[0]);
+    mexPrintf("end = %f\n",end_effector_calculated[1]);
+    mexPrintf("end = %f\n",end_effector_calculated[2]);
+    mexPrintf("-------------------------\n");
+    mexPrintf("best_next_theta_1_pos = %f\n", best_next_theta_1_pos[0]);
+    mexPrintf("best_next_theta_2_pos = %f\n", best_next_theta_2_pos[0]);
+    mexPrintf("best_next_theta_3_pos = %f\n", best_next_theta_3_pos[0]);
+    
+    mexPrintf("best_next_theta_1_neg = %f\n", best_next_theta_1_neg[0]);
+    mexPrintf("best_next_theta_2_neg = %f\n", best_next_theta_2_neg[0]);
+    mexPrintf("best_next_theta_3_neg = %f\n", best_next_theta_3_neg[0]);
 /* %%%-SFUNWIZ_wrapper_Outputs_Changes_END --- EDIT HERE TO _BEGIN */
 }
 
