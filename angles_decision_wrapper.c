@@ -30,7 +30,7 @@
 #define L3 0.105
 
 #define WEIGHT_VAR_ANGLE 0.4
-#define DELTA_THETA_DEG 0.1
+#define DELTA_THETA_DEG 0.5
 #define PI_VAL 3.14159265358979323846
 #define DEG_TO_RAD (PI_VAL / 180.0)
 
