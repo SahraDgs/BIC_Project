@@ -128,7 +128,7 @@ real_T current_theta[3];
 
                 x_after_rot = L1 * cos(angle_l1)
                             + L2 * cos(angle_l2)
-                            + L3 * cos(angle_l3) + small_seg;
+                            + L3 * cos(angle_l3)+small_seg;
 
                 y_after_rot = L1 * sin(angle_l1)
                             + L2 * sin(angle_l2)
@@ -168,7 +168,7 @@ real_T current_theta[3];
 
     end_effector_calculated[0] = L1 * cos(current_theta[0]+PI_VAL/2)
                            + L2 * cos(current_theta[0] + current_theta[1] + PI_VAL/2)
-                           + L3 * cos(current_theta[0] + current_theta[1] + current_theta[2] + PI_VAL/2)+small_seg;
+                           + L3 * cos(current_theta[0] + current_theta[1] + current_theta[2] + PI_VAL/2) + small_seg;
     end_effector_calculated[1] = 0.0;
     end_effector_calculated[2] = L1 * sin(current_theta[0]+PI_VAL/2)
                            + L2 * sin(current_theta[0] + current_theta[1]+PI_VAL/2)
