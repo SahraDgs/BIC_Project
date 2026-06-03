@@ -81,7 +81,7 @@ def decision_rotation(pos_final, choices_theta_degree, current_theta):
         tab_cost[i] = cost_error + weight_var_angle * cost_var_angles + weight_var_cart * cost_cart
 
         
-        # ce serait cool apres d'ajouter des contraintes ici par la suite pour correspondre a un bras humain
+        
 
     ind_best_choice = np.argmin(tab_cost)
     best_choice_rot = choices_theta_degree[ind_best_choice]
