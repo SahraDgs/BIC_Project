@@ -29,8 +29,8 @@
 #define L2 0.2
 #define L3 0.2
 
-#define WEIGHT_VAR_ANGLE 0.4
-#define WEIGHT_VAR_CART 0.6
+#define WEIGHT_VAR_ANGLE 0.5
+#define WEIGHT_VAR_CART 0.5
 #define DELTA_THETA_DEG 0.5
 #define PI_VAL 3.14159265358979323846
 #define DEG_TO_RAD (PI_VAL / 180.0)
