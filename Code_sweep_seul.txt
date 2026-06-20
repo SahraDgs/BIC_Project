@@ -1,0 +1,68 @@
+open_system("Articulated_arm_real_proportions");
+
+
+test
+path_simu = 'Articulated_arm_real_proportions';
+
+set_param(path_simu, 'SolverType', 'Fixed-step');   % fixed-step solver
+set_param(path_simu, 'FixedStep', '0.001');         % time step in sec
+set_param(path_simu, 'StopTime', '10');             % simulate time
+Sweep Value
+
+K1vals = [0.04 0.08];
+K2vals = [0.4 0.8];
+K3vals = [0.4 0.8];
+delta_theta = [0.1, 0.5];
+
+counter = 0;
+
+
+for i1 = 1:numel(K1vals)
+    set_param([path_simu '/Gain3'],  'Gain', num2str(K1vals(i1)));
+    set_param([path_simu '/Gain9'],  'Gain', num2str(K1vals(i1)));
+
+    for i2 = 1:numel(K2vals)
+        set_param([path_simu '/Gain4'],  'Gain', num2str(K2vals(i2)));
+        set_param([path_simu '/Gain10'], 'Gain', num2str(K2vals(i2)));
+
+        for i3 = 1:numel(K3vals)
+            set_param([path_simu '/Gain5'], 'Gain', num2str(K3vals(i3)));
+            set_param([path_simu '/Gain8'], 'Gain', num2str(K3vals(i3)));
+            
+            for i4 = 1:numel(delta_theta)
+                set_param([path_simu '/delta_angle_deg_const'], 'Value', num2str(delta_theta(i4)));
+
+                simOut = sim(path_simu);
+                logsout = simOut.logsout;
+    
+                theta_1_signal = logsout.getElement('theta_1');
+                theta_2_signal = logsout.getElement('theta_2');
+                theta_3_signal = logsout.getElement('theta_3');
+                
+                theta_1_array_prev = squeeze(theta_1_signal.Values.Data);
+                theta_2_array_prev = squeeze(theta_2_signal.Values.Data);
+                theta_3_array_prev = squeeze(theta_3_signal.Values.Data);
+
+                theta_1_array = theta_1_array_prev(:, 1);   % remove the useless dim of 0
+                theta_2_array = theta_2_array_prev(:, 1);
+                theta_3_array = theta_3_array_prev(:, 1);
+                
+                if counter == 0
+                    time_array = theta_1_signal.Values.Time;
+                    N = numel(time_array);
+                    theta_1 = zeros(N, numel(K1vals), numel(K2vals), numel(K3vals), numel(delta_theta));
+                    theta_2 = zeros(N, numel(K1vals), numel(K2vals), numel(K3vals), numel(delta_theta) );
+                    theta_3 = zeros(N, numel(K1vals), numel(K2vals), numel(K3vals), numel(delta_theta));
+                
+                end
+                counter = counter + 1;
+    
+                theta_1(:, i1, i2, i3, i4) = theta_1_array;
+                theta_2(:, i1, i2, i3, i4) = theta_2_array;
+                theta_3(:, i1, i2, i3, i4) = theta_3_array;
+
+
+            end  
+        end
+    end
+end
