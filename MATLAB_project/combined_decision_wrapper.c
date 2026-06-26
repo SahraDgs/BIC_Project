@@ -31,6 +31,8 @@
 #define small_seg -0.0275
 
 #define WEIGHT_VAR_ANGLE 0.4
+#define WEIGHT_VAR_CART 0.6
+#define DELTA_THETA_DEG 0.5
 #define PI_VAL 3.14159265358979323846
 #define DEG_TO_RAD (PI_VAL / 180.0)
 
@@ -51,11 +53,10 @@ static real_T wrap_to_pi(real_T angle)
  * Output function
  *
  */
-void angles_decision_Outputs_wrapper(const real_T *final_pos,
+void combined_decision_Outputs_wrapper(const real_T *final_pos,
 			const real_T *current_theta_1,
 			const real_T *current_theta_2,
 			const real_T *current_theta_3,
-			const real_T *delta_theta_deg,
 			real_T *best_next_theta_1_pos,
 			real_T *best_next_theta_2_pos,
 			real_T *best_next_theta_3_pos,
@@ -67,7 +68,7 @@ void angles_decision_Outputs_wrapper(const real_T *final_pos,
 /* %%%-SFUNWIZ_wrapper_Outputs_Changes_BEGIN --- EDIT HERE TO _END */
 real_T current_theta[3];
 
-    real_T possible_delta_deg[3] = {-delta_theta_deg[0], 0.0, delta_theta_deg[0]};
+    real_T possible_delta_deg[3] = {-DELTA_THETA_DEG, 0.0, DELTA_THETA_DEG};
 
     real_T best_cost;
 
@@ -88,6 +89,29 @@ real_T current_theta[3];
     best_delta_theta_1 = 0.0;
     best_delta_theta_2 = 0.0;
     best_delta_theta_3 = 0.0;
+
+    real_T x_current;
+    real_T y_current;
+    real_T a, b, c, den;
+
+    real_T angle_l1_curr = current_theta[0] + PI_VAL/2;
+    real_T angle_l2_curr = current_theta[0] + current_theta[1] + PI_VAL/2;
+    real_T angle_l3_curr = current_theta[0] + current_theta[1] + current_theta[2] + PI_VAL/2;
+
+    x_current = L1 * cos(angle_l1_curr)
+              + L2 * cos(angle_l2_curr)
+              + L3 * cos(angle_l3_curr) + small_seg;
+
+    y_current = L1 * sin(angle_l1_curr)
+              + L2 * sin(angle_l2_curr)
+              + L3 * sin(angle_l3_curr);
+
+    /* Line: current_pos -> final_pos, in implicit form a*x + b*y + c = 0 */
+    a = -(final_pos[1] - y_current);
+    b =  (final_pos[0] - x_current);
+    c = -(y_current * final_pos[0] - final_pos[1] * x_current);
+    den = sqrt(a*a + b*b);
+
 
     for (i1 = 0; i1 < 3; i1++)
     {
@@ -134,15 +158,26 @@ real_T current_theta[3];
                             + L2 * sin(angle_l2)
                             + L3 * sin(angle_l3);
 
+                real_T cart_cost;
+                real_T num;
+
                 pos_cost = (x_after_rot - final_pos[0]) * (x_after_rot - final_pos[0])
                          + (y_after_rot - final_pos[1]) * (y_after_rot - final_pos[1]);
 
-                angle_cost = WEIGHT_VAR_ANGLE *
-                             (delta_theta_1 * delta_theta_1
-                            + delta_theta_2 * delta_theta_2
-                            + delta_theta_3 * delta_theta_3);
+                if (den > 1.0e-12)
+                {
+                    num = a * x_after_rot + b * y_after_rot + c;
+                    cart_cost = (num / den) * (num / den);
+                }
+                else
+                {
+                    /* Current position coincides with target -> no straight-line constraint */
+                    cart_cost = 0.0;
+                }
 
-                total_cost = pos_cost + angle_cost;
+                angle_cost = delta_theta_1 * delta_theta_1 + delta_theta_2 * delta_theta_2 + delta_theta_3 * delta_theta_3;
+
+                total_cost = pos_cost + WEIGHT_VAR_ANGLE * angle_cost + WEIGHT_VAR_CART * cart_cost;
 
                 if (total_cost < best_cost)
                 {
@@ -159,8 +194,8 @@ real_T current_theta[3];
     /*
      * Output commands:
      *
-     * best_next_theta_i_pos = 1 if joint i must rotate by +delta_theta_deg
-     * best_next_theta_i_neg = 1 if joint i must rotate by -delta_theta_deg
+     * best_next_theta_i_pos = 1 if joint i must rotate by +DELTA_THETA_DEG
+     * best_next_theta_i_neg = 1 if joint i must rotate by -DELTA_THETA_DEG
      *
      * If no rotation is selected:
      * pos = 0 and neg = 0
@@ -182,7 +217,7 @@ real_T current_theta[3];
     best_next_theta_1_neg[0] = (best_delta_theta_1 < 0.0) ? 1.0 : 0.0;
     best_next_theta_2_neg[0] = (best_delta_theta_2 < 0.0) ? 1.0 : 0.0;
     best_next_theta_3_neg[0] = (best_delta_theta_3 < 0.0) ? 1.0 : 0.0;
-
+    
     mexPrintf("-------------------------\n");
     mexPrintf("end = %f\n",end_effector_calculated[0]);
     mexPrintf("end = %f\n",end_effector_calculated[1]);
@@ -195,16 +230,6 @@ real_T current_theta[3];
     mexPrintf("best_next_theta_1_neg = %f\n", best_next_theta_1_neg[0]);
     mexPrintf("best_next_theta_2_neg = %f\n", best_next_theta_2_neg[0]);
     mexPrintf("best_next_theta_3_neg = %f\n", best_next_theta_3_neg[0]);
-    
-   /*
-    * mexPrintf("-------------------------\n");
-    * mexPrintf("best_next_theta_1_pos = %f\n", best_next_theta_1_pos[0]);
-    * mexPrintf("best_next_theta_2_pos = %f\n", best_next_theta_2_pos[0]);
-    * mexPrintf("best_next_theta_3_pos = %f\n", best_next_theta_3_pos[0]);
-    * mexPrintf("best_next_theta_1_neg = %f\n", best_next_theta_1_neg[0]);
-    * mexPrintf("best_next_theta_2_neg = %f\n", best_next_theta_2_neg[0]);
-    * mexPrintf("best_next_theta_3_neg = %f\n", best_next_theta_3_neg[0]);
-    */
 /* %%%-SFUNWIZ_wrapper_Outputs_Changes_END --- EDIT HERE TO _BEGIN */
 }
 
